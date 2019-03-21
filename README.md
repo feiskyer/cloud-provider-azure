@@ -1,6 +1,6 @@
 # Cloud provider for Azure
 
-[![Go Report Card](https://goreportcard.com/badge/k8s.io/cloud-provider-azure)](https://goreportcard.com/report/k8s.io/cloud-provider-azure)
+[![Go Report Card](https://goreportcard.com/badge/k8s.io/cloud-provider-azure)](https://goreportcard.com/report/k8s.io/cloud-provider-azure) 
 
 ## Introduction
 
