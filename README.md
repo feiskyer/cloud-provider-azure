@@ -1,5 +1,5 @@
 # Cloud provider for Azure
-
+<test-only>
 [![Go Report Card](https://goreportcard.com/badge/k8s.io/cloud-provider-azure)](https://goreportcard.com/report/k8s.io/cloud-provider-azure)
 [![GitHub stars](https://img.shields.io/github/stars/kubernetes/cloud-provider-azure.svg)](https://github.com/kubernetes/cloud-provider-azure/stargazers)
 [![GitHub stars](https://img.shields.io/badge/contributions-welcome-orange.svg)](https://github.com/kubernetes/cloud-provider-azure/blob/master/CONTRIBUTING.md)
