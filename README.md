@@ -6,6 +6,8 @@
 
 ## Introduction
 
+<test-only> 
+    
 This repository provides tools and scripts for building and testing `Kubernetes cloud-controller-manager` for Azure. The project is under development.
 
 The Azure cloud provider code locates at [Kubernetes repository directory](https://github.com/kubernetes/kubernetes/tree/master/pkg/cloudprovider/providers/azure). If you want to create issues or pull requests for cloud provider, please go to [Kubernetes repository](https://github.com/kubernetes/kubernetes).
