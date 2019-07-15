@@ -9,8 +9,10 @@
                 "useCloudControllerManager": false,
                 "customCcmImage": "gcrio.azureedge.net/google_containers/cloud-controller-manager-amd64:v1.15.0",
                 "customHyperkubeImage": "gcrio.azureedge.net/google_containers/hyperkube-amd64:v1.15.0",
-                "networkPolicy": "none",
                 "containerRuntime": "docker",
+                "networkPlugin": "kubenet",
+                "enableAggregatedAPIs": true,
+                "enableRbac": true,
                 "cloudProviderRateLimitQPS": 6,
                 "cloudProviderRateLimitBucket": 20,
                 "controllerManagerConfig": {
@@ -24,15 +26,16 @@
         "masterProfile": {
             "count": 1,
             "dnsPrefix": "{dnsPrefix}",
-            "vmSize": "Standard_F2"
+            "storageProfile": "ManagedDisks",
+            "vmSize": "Standard_D4s_v3"
         },
         "agentPoolProfiles": [
             {
                 "name": "agentpool1",
                 "count": 2,
-                "vmSize": "Standard_F2",
+                "vmSize": "Standard_D4s_v3",
                 "enableVMSSNodePublicIP": true,
-                "availabilityProfile": "AvailabilitySet",
+                "availabilityProfile": "VirtualMachineScaleSets",
                 "storageProfile": "ManagedDisks"
             }
         ],
