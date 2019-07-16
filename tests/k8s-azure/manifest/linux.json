@@ -27,12 +27,14 @@
             "count": 1,
             "dnsPrefix": "{dnsPrefix}",
             "storageProfile": "ManagedDisks",
+            "distro": "aks-ubuntu-16.04",
             "vmSize": "Standard_D4s_v3"
         },
         "agentPoolProfiles": [
             {
                 "name": "agentpool1",
                 "count": 2,
+                "distro": "aks-ubuntu-16.04",
                 "vmSize": "Standard_D4s_v3",
                 "enableVMSSNodePublicIP": true,
                 "availabilityProfile": "VirtualMachineScaleSets",
