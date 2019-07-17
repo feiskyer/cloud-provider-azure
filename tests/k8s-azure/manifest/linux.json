@@ -36,7 +36,6 @@
                 "count": 2,
                 "distro": "aks-ubuntu-16.04",
                 "vmSize": "Standard_D4s_v3",
-                "enableVMSSNodePublicIP": true,
                 "availabilityProfile": "VirtualMachineScaleSets",
                 "storageProfile": "ManagedDisks"
             }
