@@ -106,7 +106,49 @@ func TestFindProbe(t *testing.T) {
 			expected: false,
 		},
 		{
-			msg: "both probe ports and names match should return true",
+			msg: "probe path don't match should return false",
+			existingProbe: []network.Probe{
+				{
+					Name: to.StringPtr("probe1"),
+					ProbePropertiesFormat: &network.ProbePropertiesFormat{
+						Port:        to.Int32Ptr(1),
+						RequestPath: to.StringPtr("/path1"),
+					},
+				},
+			},
+			curProbe: network.Probe{
+				Name: to.StringPtr("probe2"),
+				ProbePropertiesFormat: &network.ProbePropertiesFormat{
+					Port:        to.Int32Ptr(1),
+					RequestPath: to.StringPtr("/path2"),
+				},
+			},
+			expected: false,
+		},
+		{
+			msg: "probe interval don't match should return false",
+			existingProbe: []network.Probe{
+				{
+					Name: to.StringPtr("probe1"),
+					ProbePropertiesFormat: &network.ProbePropertiesFormat{
+						Port:              to.Int32Ptr(1),
+						RequestPath:       to.StringPtr("/path"),
+						IntervalInSeconds: to.Int32Ptr(5),
+					},
+				},
+			},
+			curProbe: network.Probe{
+				Name: to.StringPtr("probe2"),
+				ProbePropertiesFormat: &network.ProbePropertiesFormat{
+					Port:              to.Int32Ptr(1),
+					RequestPath:       to.StringPtr("/path"),
+					IntervalInSeconds: to.Int32Ptr(10),
+				},
+			},
+			expected: false,
+		},
+		{
+			msg: "probe match should return true",
 			existingProbe: []network.Probe{
 				{
 					Name: to.StringPtr("matchName"),
