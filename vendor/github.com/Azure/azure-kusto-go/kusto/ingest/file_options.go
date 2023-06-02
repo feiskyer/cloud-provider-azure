@@ -157,6 +157,19 @@ func FlushImmediately() FileOption {
 	}
 }
 
+// IgnoreFirstRecord tells Kusto to flush on write.
+func IgnoreFirstRecord() FileOption {
+	return option{
+		run: func(p *properties.All) error {
+			p.Ingestion.Additional.IgnoreFirstRecord = true
+			return nil
+		},
+		clientScopes: QueuedClient | ManagedClient,
+		sourceScope:  FromFile | FromReader | FromBlob,
+		name:         "IgnoreFirstRecord",
+	}
+}
+
 // DataFormat indicates what type of encoding format was used for source data.
 // Not all options can be used in every method.
 type DataFormat = properties.DataFormat
@@ -205,6 +218,11 @@ const (
 	// SingleJSON indicates the source is a single JSON value -- newlines are regular whitespace.
 	SingleJSON DataFormat = properties.SingleJSON
 )
+
+// InferFormatFromFileName  looks at the file name and tries to discern what the file format is
+func InferFormatFromFileName(fName string) DataFormat {
+	return properties.DataFormatDiscovery(fName)
+}
 
 // IngestionMapping provides runtime mapping of the data being imported to the fields in the table.
 // "ref" will be JSON encoded, so it can be any type that can be JSON marshalled. If you pass a string

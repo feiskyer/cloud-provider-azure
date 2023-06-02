@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/Azure/azure-kusto-go/kusto"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -174,6 +175,14 @@ func (d DataFormat) CamelCase() string {
 	return ""
 }
 
+func (d DataFormat) KnownOrDefault() kusto.DataFormatForStreaming {
+	if d == DFUnknown {
+		return CSV
+	}
+
+	return d
+}
+
 // MarshalJSON implements json.Marshaler.MarshalJSON.
 func (d DataFormat) MarshalJSON() ([]byte, error) {
 	if d == 0 {
@@ -303,8 +312,9 @@ type Additional struct {
 	IngestionMappingType DataFormat `json:"ingestionMappingType,omitempty"`
 	// ValidationPolicy is a JSON encoded string that tells our ingestion action what policies we want on the
 	// data being ingested and what to do when that is violated.
-	ValidationPolicy string     `json:"validationPolicy,omitempty"`
-	Format           DataFormat `json:"format,omitempty"`
+	ValidationPolicy  string     `json:"validationPolicy,omitempty"`
+	Format            DataFormat `json:"format,omitempty"`
+	IgnoreFirstRecord bool       `json:"ignoreFirstRecord"`
 	// Tags is a list of tags to associated with the ingested data.
 	Tags []string `json:"tags,omitempty"`
 	// IngestIfNotExists is a string value that, if specified, prevents ingestion from succeeding if the table already
