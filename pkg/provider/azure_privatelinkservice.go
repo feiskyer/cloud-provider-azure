@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
@@ -236,6 +237,18 @@ func (az *Cloud) disablePLSNetworkPolicy(ctx context.Context, service *v1.Servic
 	return nil
 }
 
+// frontendIPConfigurationIDRE matches FrontendIPConfiguration IDs and extracts the LoadBalancer name
+var frontendIPConfigurationIDRE = regexp.MustCompile(`/subscriptions/(?:.*)/resourceGroups/(?:.*)/providers/Microsoft.Network/loadBalancers/(.+)/frontendIPConfigurations/(?:.*)`)
+
+// getLBNameFromFrontendIPConfigurationID extracts the LB name from a frontend IP configuration ID
+func getLBNameFromFrontendIPConfigurationID(fipConfigID string) (string, error) {
+	matches := frontendIPConfigurationIDRE.FindStringSubmatch(fipConfigID)
+	if len(matches) != 2 {
+		return "", fmt.Errorf("frontendIPConfigurationID %q is in wrong format", fipConfigID)
+	}
+	return matches[1], nil
+}
+
 func (az *Cloud) safeDeletePLS(ctx context.Context, pls *armnetwork.PrivateLinkService, service *v1.Service) error {
 	if pls == nil {
 		return nil
@@ -257,6 +270,17 @@ func (az *Cloud) safeDeletePLS(ctx context.Context, pls *armnetwork.PrivateLinkS
 	if rerr != nil {
 		return rerr
 	}
+	
+	// Extract the LoadBalancer name from the frontend IP configuration ID and invalidate the LB cache
+	// to ensure we get the updated Etag after PLS deletion
+	lbName, err := getLBNameFromFrontendIPConfigurationID(lbFrontendID)
+	if err == nil && lbName != "" {
+		klog.V(3).Infof("Invalidating LoadBalancer cache for %s after PLS deletion", lbName)
+		_ = az.lbCache.Delete(lbName)
+	} else if err != nil {
+		klog.Warningf("Failed to extract LoadBalancer name from frontendIPConfigurationID %q: %v", lbFrontendID, err)
+	}
+	
 	klog.V(2).Infof("safeDeletePLS(%s) finished", ptr.Deref(pls.Name, ""))
 	return nil
 }

@@ -33,6 +33,7 @@ import (
 
 	"sigs.k8s.io/cloud-provider-azure/pkg/cache"
 	"sigs.k8s.io/cloud-provider-azure/pkg/consts"
+	"sigs.k8s.io/cloud-provider-azure/pkg/provider/azure"
 	"sigs.k8s.io/cloud-provider-azure/pkg/provider/privatelinkservice"
 	"sigs.k8s.io/cloud-provider-azure/pkg/provider/subnet"
 )
@@ -451,6 +452,41 @@ func TestDisablePLSNetworkPolicy(t *testing.T) {
 	}
 }
 
+func TestGetLBNameFromFrontendIPConfigurationID(t *testing.T) {
+	tests := []struct {
+		desc      string
+		fipID     string
+		expectedLB string
+		expectedErr bool
+	}{
+		{
+			desc:      "valid frontend IP configuration ID",
+			fipID:     "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/loadBalancers/lb1/frontendIPConfigurations/fip1",
+			expectedLB: "lb1",
+		},
+		{
+			desc:      "valid frontend IP configuration ID with complex LB name",
+			fipID:     "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/loadBalancers/k8s-lb-test123/frontendIPConfigurations/fip1",
+			expectedLB: "k8s-lb-test123",
+		},
+		{
+			desc:      "invalid frontend IP configuration ID",
+			fipID:     "invalid-id",
+			expectedErr: true,
+		},
+	}
+	
+	for i, test := range tests {
+		lbName, err := getLBNameFromFrontendIPConfigurationID(test.fipID)
+		if test.expectedErr {
+			assert.Error(t, err, "TestCase[%d]: %s", i, test.desc)
+		} else {
+			assert.NoError(t, err, "TestCase[%d]: %s", i, test.desc)
+			assert.Equal(t, test.expectedLB, lbName, "TestCase[%d]: %s", i, test.desc)
+		}
+	}
+}
+
 func TestSafeDeletePLS(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -465,7 +501,7 @@ func TestSafeDeletePLS(t *testing.T) {
 			pls: &armnetwork.PrivateLinkService{
 				Name: ptr.To("testpls"),
 				Properties: &armnetwork.PrivateLinkServiceProperties{
-					LoadBalancerFrontendIPConfigurations: []*armnetwork.FrontendIPConfiguration{{ID: ptr.To("FipConfigID")}},
+					LoadBalancerFrontendIPConfigurations: []*armnetwork.FrontendIPConfiguration{{ID: ptr.To("/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/loadBalancers/lb1/frontendIPConfigurations/fip1")}},
 					PrivateEndpointConnections: []*armnetwork.PrivateEndpointConnection{
 						{Name: ptr.To("pe1")},
 						{Name: ptr.To("pe2")},
@@ -481,6 +517,12 @@ func TestSafeDeletePLS(t *testing.T) {
 		mockPLSRepo.EXPECT().DeletePEConnection(gomock.Any(), "rg", "testpls", "pe1").Return(nil).Times(1)
 		mockPLSRepo.EXPECT().DeletePEConnection(gomock.Any(), "rg", "testpls", "pe2").Return(nil).Times(1)
 		mockPLSRepo.EXPECT().Delete(gomock.Any(), "rg", "testpls", gomock.Any()).Return(nil).Times(1)
+		
+		// Expect LB cache invalidation
+		mockLBCache := azure.NewMockResource(ctrl)
+		mockLBCache.EXPECT().Delete("lb1").Return(nil).Times(1)
+		az.lbCache = mockLBCache
+		
 		service := getTestService("test1", v1.ProtocolTCP, nil, false, 80)
 		rerr := az.safeDeletePLS(context.Background(), test.pls, &service)
 		assert.Equal(t, test.expectedError, rerr != nil, "TestCase[%d]: %s", i, test.desc)
